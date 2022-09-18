@@ -11,17 +11,30 @@ import { RoomEntity } from '../../chat/entity/room/room.entity';
 import { ConnectedUserEntity } from '../../chat/entity/connected.user/connected.user.entity';
 import { JoinedRoomEntity } from '../../chat/entity/joined.room/joined.room.entity';
 import { MessageEntity } from '../../chat/entity/message/message.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity({
   name: 'user',
 })
 export class UserEntity {
+  @ApiProperty({
+    type: Number,
+    example: 1,
+  })
   @PrimaryGeneratedColumn()
   id: number;
 
+  @ApiProperty({
+    type: String,
+    example: 'Some string',
+  })
   @Column()
   username: string;
 
+  @ApiProperty({
+    type: Number,
+    example: 1,
+  })
   @Column({ unique: true })
   email: string;
 
