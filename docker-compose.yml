@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: ./backend
+      target: development
+    volumes:
+      - ./api:/thomas/src/app
+      - /thomas/src/app/node_modules/
+    command: npm run start:debug
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/db
+      NODE_ENV: development
+      JWT_SECRET: hard_to_guess_secret_123
+      PORT: 3000
+    ports:
+      - 3000:3000
+      - 9229:9229
+
+  postgres:
+    image: postgres:10.4
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    ports:
+      - 35000:5432
