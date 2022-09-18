@@ -6,7 +6,7 @@
 FROM node:16-alpine as development
 
 # Specfy working directory
-WORKDIR /chat/backend
+WORKDIR /app
 
 # Copy package.json and package-lock.json to workdir
 COPY package*.json ./
@@ -15,7 +15,7 @@ COPY package*.json ./
 RUN yarn
 
 # Bundle app source
-COPY . .
+COPY ./ ./
 
 # Build project
 RUN yarn build
@@ -33,10 +33,10 @@ ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
 # Set workdi
-WORKDIR /chat/backend
+WORKDIR /app
 
 # Copy from development image to production image
-COPY --from=development /chat/backend .
+COPY --from=development ./ ./
 
 # Expose port 8080
 EXPOSE 8080
