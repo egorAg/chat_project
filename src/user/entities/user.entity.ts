@@ -28,6 +28,9 @@ export class UserEntity {
   @Column({ select: false })
   password: string;
 
+  @Column({ select: false, nullable: true })
+  currentHashedRefreshToken: string;
+
   @ManyToMany(() => RoomEntity, (room) => room.users)
   rooms: RoomEntity[];
 

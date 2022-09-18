@@ -6,7 +6,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { UnauthorizedException} from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../../auth/service/auth.service';
 import { UserService } from '../../user/service/user.service';
 import { IUser } from '../../user/entities/user.interface';
@@ -14,12 +14,12 @@ import { RoomService } from '../service/room.service';
 import { UserConnectedService } from '../service/user.connected.service';
 import { IRoom } from '../entity/room/room.interface';
 import { IPage } from '../entity/room/page.interface';
-import {JoinedRoomService} from "../service/joined.room.service";
-import {IMessage} from "../entity/message/message.interface";
-import {MessageService} from "../service/message.service";
-import {IPaginationOptions, Pagination} from "nestjs-typeorm-paginate";
-import {IJoinedRoom} from "../entity/joined.room/joined.room.interface";
-import {IMoveUser} from "../entity/room/add.user.interface";
+import { JoinedRoomService } from '../service/joined.room.service';
+import { IMessage } from '../entity/message/message.interface';
+import { MessageService } from '../service/message.service';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { IJoinedRoom } from '../entity/joined.room/joined.room.interface';
+import { IMoveUser } from '../entity/room/add.user.interface';
 
 @WebSocketGateway({
   cors: {
@@ -36,7 +36,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly roomService: RoomService,
     private readonly userConnectedService: UserConnectedService,
     private readonly joinedRoomService: JoinedRoomService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
   ) {}
 
   async handleConnection(socket: Socket): Promise<boolean> {
@@ -106,45 +106,66 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinRoom')
-  public async joinRoom(socket: Socket, room: IRoom, options: IPaginationOptions) {
-    const messages: Pagination<IMessage> = await this.messageService.findMessagesForRoom(room, options || {page: 1, limit: 100})
+  public async joinRoom(
+    socket: Socket,
+    room: IRoom,
+    options: IPaginationOptions,
+  ) {
+    const messages: Pagination<IMessage> =
+      await this.messageService.findMessagesForRoom(
+        room,
+        options || { page: 1, limit: 100 },
+      );
 
-    await this.joinedRoomService.create({socketId: socket.id, users: socket.data.user, room: room})
+    await this.joinedRoomService.create({
+      socketId: socket.id,
+      users: socket.data.user,
+      room: room,
+    });
 
-    this.server.to(socket.id).emit('messages', messages)
+    this.server.to(socket.id).emit('messages', messages);
   }
 
   @SubscribeMessage('leaveRoom')
   public async leaveRoom(socket: Socket) {
-    await this.joinedRoomService.deleteBySocketId(socket.id)
+    await this.joinedRoomService.deleteBySocketId(socket.id);
   }
 
   @SubscribeMessage('addMessage')
   public async addMessage(socket: Socket, message: IMessage) {
-    const createdMessage = await this.messageService.create({...message, user: socket.data.user})
-    const room: IRoom = await this.roomService.getRoom(createdMessage.room.id)
-    const users: IJoinedRoom[] = await this.joinedRoomService.findByRoom(room)
+    const createdMessage = await this.messageService.create({
+      ...message,
+      user: socket.data.user,
+    });
+    const room: IRoom = await this.roomService.getRoom(createdMessage.room.id);
+    const users: IJoinedRoom[] = await this.joinedRoomService.findByRoom(room);
 
     for (const user of users) {
-      this.server.to(user.socketId).emit('messageAdded', createdMessage)
+      this.server.to(user.socketId).emit('messageAdded', createdMessage);
     }
   }
 
   @SubscribeMessage('addUserToRoom')
   public async addUserToRoom(socket: Socket, data: IMoveUser) {
-    const rooms = await this.roomService.addUserToRoom(data, {page: 1, limit: 10})
-    const connections = await this.userConnectedService.findByUser(data.user)
+    const rooms = await this.roomService.addUserToRoom(data, {
+      page: 1,
+      limit: 10,
+    });
+    const connections = await this.userConnectedService.findByUser(data.user);
     for (const connection of connections) {
-      this.server.to(connection.socketId).emit('rooms', rooms)
+      this.server.to(connection.socketId).emit('rooms', rooms);
     }
   }
 
   @SubscribeMessage('removeUserFromRoom')
   public async removeUserFromRoom(socket: Socket, data: IMoveUser) {
-    const rooms = await this.roomService.removeUser(data, {page: 1, limit: 10})
-    const connections = await this.userConnectedService.findByUser(data.user)
+    const rooms = await this.roomService.removeUser(data, {
+      page: 1,
+      limit: 10,
+    });
+    const connections = await this.userConnectedService.findByUser(data.user);
     for (const connection of connections) {
-      this.server.to(connection.socketId).emit('rooms', rooms)
+      this.server.to(connection.socketId).emit('rooms', rooms);
     }
   }
 }

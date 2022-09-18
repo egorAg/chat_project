@@ -11,6 +11,7 @@ export class AuthService {
   public async generateJwt(user: IUser): Promise<ILoginResponse> {
     const token = await this.jwtService.signAsync({ user });
     return <ILoginResponse>{
+      refresh_token: user.currentHashedRefreshToken,
       access_token: token,
       token_type: 'jwt',
       expires_in: '12h',

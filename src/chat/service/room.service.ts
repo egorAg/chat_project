@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoomEntity } from '../entity/room/room.entity';
-import {getRepository, Repository} from 'typeorm';
+import { getRepository, Repository } from 'typeorm';
 import { IRoom } from '../entity/room/room.interface';
 import { IUser } from '../../user/entities/user.interface';
 import {
@@ -9,9 +9,8 @@ import {
   paginate,
   Pagination,
 } from 'nestjs-typeorm-paginate';
-import {IMoveUser} from "../entity/room/add.user.interface";
-import {UserEntity} from "../../user/entities/user.entity";
-import {inflate} from "zlib";
+import { IMoveUser } from '../entity/room/add.user.interface';
+import { UserEntity } from '../../user/entities/user.entity';
 
 @Injectable()
 export class RoomService {
@@ -39,37 +38,48 @@ export class RoomService {
     return paginate(query, options);
   }
 
-
   public async getRoom(roomId: number): Promise<IRoom> {
-    return this.roomRepo.findOne({where: {id: roomId}, relations: ['users']})
+    return this.roomRepo.findOne({
+      where: { id: roomId },
+      relations: ['users'],
+    });
   }
 
-  public async addUserToRoom(input: IMoveUser, options: IPaginationOptions): Promise<Pagination<IRoom>> {
-    const {id} = input.room
-    const room = await this.roomRepo.findOne({where: {id}, relations: ['users']})
+  public async addUserToRoom(
+    input: IMoveUser,
+    options: IPaginationOptions,
+  ): Promise<Pagination<IRoom>> {
+    const { id } = input.room;
+    const room = await this.roomRepo.findOne({
+      where: { id },
+      relations: ['users'],
+    });
 
-    room.users.push(<UserEntity>input.user)
+    room.users.push(<UserEntity>input.user);
 
-    await getRepository(RoomEntity).save(room)
+    await getRepository(RoomEntity).save(room);
 
     return paginate(this.roomRepo, options, {
-      where: {id},
-      relations: ['users']
-    })
+      where: { id },
+      relations: ['users'],
+    });
   }
 
   async removeUser(input: IMoveUser, options: IPaginationOptions) {
-    const {room, user} = input
-    const candidate = await this.roomRepo.findOne({where: {id: room.id}, relations: ['users']})
+    const { room, user } = input;
+    const candidate = await this.roomRepo.findOne({
+      where: { id: room.id },
+      relations: ['users'],
+    });
 
-    candidate.users.filter((userItem) => userItem.id != user.id)
+    candidate.users.filter((userItem) => userItem.id != user.id);
 
-    await getRepository(RoomEntity).save(candidate)
+    await getRepository(RoomEntity).save(candidate);
 
     return paginate(this.roomRepo, options, {
-      where: {id: room.id},
-      relations: ['users']
-    })
+      where: { id: room.id },
+      relations: ['users'],
+    });
   }
 
   private async addCreatorToRoom(room: IRoom, creator: IUser): Promise<IRoom> {

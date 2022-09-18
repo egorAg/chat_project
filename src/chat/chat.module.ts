@@ -10,10 +10,16 @@ import { ConnectedUserEntity } from './entity/connected.user/connected.user.enti
 import { JoinedRoomEntity } from './entity/joined.room/joined.room.entity';
 import { MessageEntity } from './entity/message/message.entity';
 import { JoinedRoomService } from './service/joined.room.service';
-import {MessageService} from "./service/message.service";
+import { MessageService } from './service/message.service';
 
 @Module({
-  providers: [ChatGateway, RoomService, UserConnectedService, JoinedRoomService, MessageService],
+  providers: [
+    ChatGateway,
+    RoomService,
+    UserConnectedService,
+    JoinedRoomService,
+    MessageService,
+  ],
   imports: [
     AuthModule,
     UserModule,

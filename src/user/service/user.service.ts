@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { IUser } from '../entities/user.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../entities/user.entity';
-import { Like, Repository } from 'typeorm';
+import { getRepository, Like, Repository } from 'typeorm';
 import {
   IPaginationOptions,
   paginate,
@@ -10,6 +10,7 @@ import {
 } from 'nestjs-typeorm-paginate';
 import { AuthService } from '../../auth/service/auth.service';
 import { ILoginResponse } from '../entities/login.response.interface';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
@@ -17,6 +18,7 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
     private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
   ) {}
 
   public async create(input: IUser): Promise<IUser> {
@@ -27,9 +29,39 @@ export class UserService {
 
     const hash = await this.authService.hashPassword(input.password);
 
-    const newUser = await this.userRepo.save({ ...input, password: hash });
+    const token = await this.jwtService.signAsync({
+      email: input.email,
+      username: input.username,
+    });
+
+    const newUser = await this.userRepo.save({
+      ...input,
+      password: hash,
+      currentHashedRefreshToken: token,
+    });
 
     return this.findOne(newUser.id);
+  }
+
+  public async refresh(token: string) {
+    await this.jwtService.verify(token);
+
+    const data = await (<IUser>this.jwtService.decode(token));
+
+    const candidate = await this.userRepo.findOne({
+      where: { email: data.email },
+    });
+
+    if (!candidate)
+      throw new HttpException('Bad token, re-login', HttpStatus.CONFLICT);
+
+    candidate.currentHashedRefreshToken = await this.jwtService.signAsync({ ...candidate });
+
+    await getRepository(UserEntity).save({ ...candidate });
+
+    return this.authService.generateJwt(
+      await this.getOneWithToken(candidate.id),
+    );
   }
 
   public async findAll(
@@ -57,14 +89,12 @@ export class UserService {
       candidate.password,
     );
 
-    console.log(input.password);
-
-    console.log(isPasswordValid);
-
     if (!isPasswordValid)
       throw new HttpException('Bad credentials', HttpStatus.UNAUTHORIZED);
 
-    return this.authService.generateJwt(await this.findOne(candidate.id));
+    return this.authService.generateJwt(
+      await this.getOneWithToken(candidate.id),
+    );
   }
 
   public async getOne(id: number): Promise<IUser> {
@@ -78,7 +108,20 @@ export class UserService {
   }
 
   private async findOne(id: number): Promise<IUser> {
-    return this.userRepo.findOne({ where: { id } });
+    return this.userRepo.findOne({ where: { id }, select: [] });
+  }
+
+  private getOneWithToken(id: number) {
+    return this.userRepo.findOne({
+      where: { id },
+      select: [
+        'id',
+        'email',
+        'username',
+        'password',
+        'currentHashedRefreshToken',
+      ],
+    });
   }
 
   private async findByEmail(email: string): Promise<IUser> {

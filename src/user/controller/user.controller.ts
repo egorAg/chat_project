@@ -48,4 +48,9 @@ export class UserController {
   ): Promise<IUser[]> {
     return this.userService.findByUsername(username);
   }
+
+  @Post('refresh')
+  async refresh(@Query('token') token: string) {
+    return this.userService.refresh(token);
+  }
 }

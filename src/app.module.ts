@@ -47,6 +47,10 @@ export class AppModule implements NestModule {
           path: 'user/login',
           method: RequestMethod.POST,
         },
+        {
+          path: 'user/refresh',
+          method: RequestMethod.POST,
+        },
       )
       .forRoutes('');
   }
