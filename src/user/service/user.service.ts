@@ -21,7 +21,7 @@ export class UserService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public async create(input: IUser): Promise<IUser> {
+  public async create(input: IUser): Promise<ILoginResponse> {
     const isExists = await this.mailExists(input.email);
 
     if (isExists)
@@ -34,13 +34,13 @@ export class UserService {
       username: input.username,
     });
 
-    const newUser = await this.userRepo.save({
+    await this.userRepo.save({
       ...input,
       password: hash,
       currentHashedRefreshToken: token,
     });
 
-    return this.findOne(newUser.id);
+    return this.login(input)
   }
 
   public async refresh(token: string) {
@@ -107,10 +107,6 @@ export class UserService {
     const candidate = await this.userRepo.findOne({ where: { email } });
 
     return !!candidate;
-  }
-
-  private async findOne(id: number): Promise<IUser> {
-    return this.userRepo.findOne({ where: { id }});
   }
 
   private getOneWithToken(id: number) {

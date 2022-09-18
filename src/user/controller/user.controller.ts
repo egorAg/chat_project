@@ -34,7 +34,7 @@ export class UserController {
     type: UserEntity,
   })
   @Post('create')
-  public async createUser(@Body() dto: UserCreateDto): Promise<IUser> {
+  public async createUser(@Body() dto: UserCreateDto): Promise<ILoginResponse> {
     const iUser = this.userHelperProvider.createUserDtoToEntity(dto);
 
     return this.userService.create(iUser);
