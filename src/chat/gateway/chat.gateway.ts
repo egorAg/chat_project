@@ -6,7 +6,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import {OnModuleInit, UnauthorizedException} from '@nestjs/common';
+import { UnauthorizedException} from '@nestjs/common';
 import { AuthService } from '../../auth/service/auth.service';
 import { UserService } from '../../user/service/user.service';
 import { IUser } from '../../user/entities/user.interface';
@@ -17,10 +17,9 @@ import { IPage } from '../entity/room/page.interface';
 import {JoinedRoomService} from "../service/joined.room.service";
 import {IMessage} from "../entity/message/message.interface";
 import {MessageService} from "../service/message.service";
-import {Pagination} from "nestjs-typeorm-paginate";
+import {IPaginationOptions, Pagination} from "nestjs-typeorm-paginate";
 import {IJoinedRoom} from "../entity/joined.room/joined.room.interface";
 import {IMoveUser} from "../entity/room/add.user.interface";
-import {inflate} from "zlib";
 
 @WebSocketGateway({
   cors: {
@@ -107,8 +106,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinRoom')
-  public async joinRoom(socket: Socket, room: IRoom) {
-    const messages: Pagination<IMessage> = await this.messageService.findMessagesForRoom(room, {page: 1, limit: 10})
+  public async joinRoom(socket: Socket, room: IRoom, options: IPaginationOptions) {
+    const messages: Pagination<IMessage> = await this.messageService.findMessagesForRoom(room, options || {page: 1, limit: 100})
 
     await this.joinedRoomService.create({socketId: socket.id, users: socket.data.user, room: room})
 
@@ -122,7 +121,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('addMessage')
   public async addMessage(socket: Socket, message: IMessage) {
-    console.log(message)
     const createdMessage = await this.messageService.create({...message, user: socket.data.user})
     const room: IRoom = await this.roomService.getRoom(createdMessage.room.id)
     const users: IJoinedRoom[] = await this.joinedRoomService.findByRoom(room)
