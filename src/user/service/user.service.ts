@@ -110,7 +110,7 @@ export class UserService {
   }
 
   private async findOne(id: number): Promise<IUser> {
-    return this.userRepo.findOne({ where: { id }, select: [] });
+    return this.userRepo.findOne({ where: { id }});
   }
 
   private getOneWithToken(id: number) {
