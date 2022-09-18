@@ -55,7 +55,9 @@ export class UserService {
     if (!candidate)
       throw new HttpException('Bad token, re-login', HttpStatus.CONFLICT);
 
-    candidate.currentHashedRefreshToken = await this.jwtService.signAsync({ ...candidate });
+    candidate.currentHashedRefreshToken = await this.jwtService.signAsync({
+      ...candidate,
+    });
 
     await getRepository(UserEntity).save({ ...candidate });
 
