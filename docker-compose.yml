@@ -1,8 +1,16 @@
 version: "3.8"
 
+networks:
+  myness_nginx:
+    external: true
+    name: 'myness_nginx'
+  myness_back:
+
 services:
   postgres:
     image: postgres:13
+    networks:
+      myness_back:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -12,12 +20,17 @@ services:
 
   redis:
     image: redis:latest
+    networks:
+      myness_back:
     ports:
       - 6379:6379
 
   api:
     container_name: api
     restart: unless-stopped
+    networks:
+      myness_nginx:
+      myness_back:
     build:
       context: .
       dockerfile: Dockerfile
