@@ -1,47 +1,18 @@
-#################
-## DEVELOPMENT ##
-#################
+#set node version
+FROM node:16
 
-# Specify Node Version and Image
-FROM node:16-alpine as development
+#set workdir
+WORKDIR /api
 
-# Specfy working directory
-WORKDIR /app
-
-# Copy package.json and package-lock.json to workdir
-COPY package*.json ./
-
-# Install packages
-RUN yarn
-
-# Bundle app source
+#copy project files
 COPY ./ ./
 
-# Build project
-RUN yarn build
+#install packages from package.json
+RUN yarn
 
-# Expose port 5001
+#build project for static and node_modules
+RUN yarn run build
+
 EXPOSE 5001
-
-################
-## PRODUCTION ##
-################
-FROM node:16-alpine as production
-
-# Set node_env as production
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-
-# Set workdi
-WORKDIR /app
-
-# Copy from development image to production image
-COPY --from=development ./ ./
-
-# Expose port 8080
-EXPOSE 8080
-
-# start via node js
-CMD ["node", "dist/main"]
-
-
+ENTRYPOINT ["yarn"]
+CMD ["run", "start"]

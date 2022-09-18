@@ -2,23 +2,23 @@ version: "3.8"
 
 services:
   api:
+    container_name: api
+    restart: unless-stopped
     build:
+      context: .
       dockerfile: Dockerfile
-      context: ./
-      target: development
     volumes:
-      - ./:/app
-    command: yarn start
-    depends_on:
-      - postgres
+      - ./src:/app/src
+      - ./node_modules:/app/node_modules
     environment:
       DATABASE_URL: postgres://user:password@postgres:5432/db
       NODE_ENV: development
       JWT_SECRET: hard_to_guess_secret_123
       PORT: 5001
     ports:
-      - 5001:5001
-      - 9229:9229
+      - "5001:5001"
+    depends_on:
+      - db
 
   postgres:
     image: postgres:13
