@@ -34,13 +34,34 @@ export class UserService {
       username: input.username,
     });
 
-    await this.userRepo.save({
+    const newUser = await this.userRepo.save({
       ...input,
       password: hash,
       currentHashedRefreshToken: token,
     });
 
-    return this.login(input)
+    return this.authService.generateJwt(
+        await this.getOneWithToken(newUser.id),
+    );
+  }
+
+  public async login(input: IUser): Promise<ILoginResponse> {
+    const candidate = await this.findByEmail(input.email);
+
+    if (!candidate)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    const isPasswordValid: boolean = await this.authService.validatePassword(
+        input.password,
+        candidate.password,
+    );
+
+    if (!isPasswordValid)
+      throw new HttpException('Bad credentials', HttpStatus.UNAUTHORIZED);
+
+    return this.authService.generateJwt(
+        await this.getOneWithToken(candidate.id),
+    );
   }
 
   public async refresh(token: string) {
@@ -78,25 +99,6 @@ export class UserService {
         username: Like(`%${username.toLowerCase()}%`),
       },
     });
-  }
-
-  public async login(input: IUser): Promise<ILoginResponse> {
-    const candidate = await this.findByEmail(input.email);
-
-    if (!candidate)
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-
-    const isPasswordValid: boolean = await this.authService.validatePassword(
-      input.password,
-      candidate.password,
-    );
-
-    if (!isPasswordValid)
-      throw new HttpException('Bad credentials', HttpStatus.UNAUTHORIZED);
-
-    return this.authService.generateJwt(
-      await this.getOneWithToken(candidate.id),
-    );
   }
 
   public async getOne(id: number): Promise<IUser> {

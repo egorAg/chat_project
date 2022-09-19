@@ -40,26 +40,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(socket: Socket): Promise<boolean> {
-    try {
-      const token = await this.authService.verifyJwt(
-        socket.handshake.headers.authorization.split(' ')[1],
-      );
-      const user: IUser = await this.userService.getOne(token.user.id);
-      if (!user) {
-        this.disconnect(socket);
-      } else {
-        socket.data.user = user;
-        const rooms = await this.roomService.getRoomByUserId(user.id, {
-          page: 1,
-          limit: 10,
-        });
-        await this.userConnectedService.create({ socketId: socket.id, user });
-
-        return this.server.to(socket.id).emit('rooms', rooms);
-      }
-    } catch (e) {
-      this.disconnect(socket);
-    }
+    return await this.onNewConnection(socket)
   }
 
   async handleDisconnect(socket: Socket): Promise<void> {
@@ -166,6 +147,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const connections = await this.userConnectedService.findByUser(data.user);
     for (const connection of connections) {
       this.server.to(connection.socketId).emit('rooms', rooms);
+    }
+  }
+
+  private async onNewConnection (socket: Socket) {
+    try {
+      const token = await this.authService.verifyJwt(
+          socket.handshake.headers.authorization.split(' ')[1],
+      );
+      const user: IUser = await this.userService.getOne(token.user.id);
+      if (!user) {
+        this.disconnect(socket);
+      } else {
+        socket.data.user = user;
+        const rooms = await this.roomService.getRoomByUserId(user.id, {
+          page: 1,
+          limit: 10,
+        });
+        await this.userConnectedService.create({ socketId: socket.id, user });
+
+        return this.server.to(socket.id).emit('rooms', rooms);
+      }
+    } catch (e) {
+      this.disconnect(socket);
     }
   }
 }
