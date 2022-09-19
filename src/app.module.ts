@@ -37,6 +37,9 @@ import {LoggingMiddleware} from "./middleware/logging.middleware";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
+    consumer.apply(LoggingMiddleware)
+        .forRoutes('')
+
     consumer
       .apply(AuthMiddleware)
       .exclude(
@@ -54,8 +57,5 @@ export class AppModule implements NestModule {
         },
       )
       .forRoutes('');
-
-      consumer.apply(LoggingMiddleware)
-          .forRoutes('')
   }
 }
