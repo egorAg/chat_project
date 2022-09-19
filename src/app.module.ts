@@ -12,7 +12,6 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { ChatModule } from './chat/chat.module';
-import {LoggingMiddleware} from "./middleware/logging.middleware";
 
 @Module({
   imports: [
@@ -37,8 +36,6 @@ import {LoggingMiddleware} from "./middleware/logging.middleware";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
-    consumer.apply(LoggingMiddleware)
-        .forRoutes('')
 
     consumer
       .apply(AuthMiddleware)
