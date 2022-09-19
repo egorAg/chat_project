@@ -12,6 +12,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { ChatModule } from './chat/chat.module';
+import {LoggingMiddleware} from "./middleware/logging.middleware";
 
 @Module({
   imports: [
@@ -53,5 +54,8 @@ export class AppModule implements NestModule {
         },
       )
       .forRoutes('');
+
+      consumer.apply(LoggingMiddleware)
+          .forRoutes('')
   }
 }
