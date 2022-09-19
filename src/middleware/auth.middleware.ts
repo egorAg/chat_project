@@ -1,7 +1,7 @@
 import {
   HttpException,
   HttpStatus,
-  Injectable,
+  Injectable, Logger,
   NestMiddleware,
 } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
@@ -15,6 +15,7 @@ export interface IRequest extends Request {
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
+  logger: Logger = new Logger()
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
@@ -22,6 +23,8 @@ export class AuthMiddleware implements NestMiddleware {
 
   async use(req: IRequest, res: Response, next: NextFunction) {
     try {
+      this.logger.log(`New incoming request: ${req.path}`)
+
       const tokensArray: string[] = req.headers['authorization'].split(' ');
 
       const decodeToken = await this.authService.verifyJwt(tokensArray[1]);
